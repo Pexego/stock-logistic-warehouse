@@ -61,5 +61,5 @@ insufficient at the order date, you may want to install the
  'test': ['test/sale_reserve.yml',
           'test/sale_line_reserve.yml',
           ],
- 'installable': True,
+ 'installable': False,
  }
