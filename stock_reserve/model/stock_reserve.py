@@ -19,17 +19,21 @@
 #
 ##############################################################################
 
-from openerp.osv import orm, fields
+from openerp import SUPERUSER_ID
+from openerp.osv import fields, osv
+import openerp.addons.decimal_precision as dp
 from openerp.tools.translate import _
+import openerp
 
 
-class stock_reservation(orm.Model):
+
+class stock_reservation(osv.osv):
     """ Allow to reserve products.
 
     The fields mandatory for the creation of a reservation are:
 
     * product_id
-    * product_qty
+    * product_uom_qty
     * product_uom
     * name
 
@@ -48,8 +52,18 @@ class stock_reservation(orm.Model):
     _name = 'stock.reservation'
     _description = 'Stock Reservation'
     _inherits = {'stock.move': 'move_id'}
+    _order = "sequence asc"
+
+    def _new_sequence (self, cr, uid, context=None):
+        query = "SELECT MAX(sequence)  FROM stock_reservation "
+        cr.execute(query, ())
+        regs = cr.fetchall()
+        for reg in regs:
+             sequence = reg[0] + 1
+        return sequence
 
     _columns = {
+        'sequence': fields.integer('Sequence', help="Gives the priority in reservation."),
         'move_id': fields.many2one('stock.move',
                                    'Reservation Move',
                                    required=True,
@@ -57,6 +71,17 @@ class stock_reservation(orm.Model):
                                    ondelete='cascade',
                                    select=1),
         'date_validity': fields.date('Validity Date'),
+
+        'reservation_id': fields.many2one('stock.reservation',
+                                   'Parent reservation',
+                                   required=False,
+                                   readonly=True,
+                                   ondelete='cascade',
+                                   select=1),
+        'splitted_reservations': fields.one2many('stock.reservation',
+                                                 'reservation_id',
+                                                 'Reservation splitted',
+                                                 readonly=True,),
     }
 
     def get_location_from_ref(self, cr, uid, ref, context=None):
@@ -70,7 +95,7 @@ class stock_reservation(orm.Model):
             __, location_id = get_ref(cr, uid, *ref)
             location_obj.check_access_rule(cr, uid, [location_id],
                                            'read', context=context)
-        except (orm.except_orm, ValueError):
+        except (osv.except_osv, ValueError):
             location_id = False
         return location_id
 
@@ -86,11 +111,70 @@ class stock_reservation(orm.Model):
         return self.get_location_from_ref(cr, uid, ref, context=context)
 
     _defaults = {
-        'type': 'internal',
         'location_id': _default_location_id,
         'location_dest_id': _default_location_dest_id,
-        'product_qty': 1.0,
+        'product_uom_qty': 1.0,
+        'sequence': _new_sequence,
     }
+
+    def write(self, cr, uid, ids, vals, context=None):
+        if context is None:
+            context = {}
+        if not ids:
+            return True
+        if isinstance(ids, (int, long)):
+            ids = [ids]
+        print context
+        res =  super(stock_reservation, self).write(cr, uid, ids, vals, context=context)
+        if vals.get('sequence', False):
+            if context.get('first', False) and context['first'] == True:
+                print "REASIGNA"
+                print vals['sequence']
+
+                self.reassign(cr, uid, ids, context)
+        return res
+
+    def reassign(self, cr, uid, ids, context=None):
+        if context is None:
+            context = {}
+        move_obj = self.pool.get('stock.move')
+        reservations = self.browse(cr, uid, ids, context=context)
+        reserv_to_release=[]
+        for reservation in reservations:
+            reserv_ids = self.search(cr, uid, [('sequence', '>=', reservation.sequence), ('product_id', '=', reservation.product_id.id), ('state', 'in', ['draft', 'confirmed', 'assigned'])])
+
+            reserv_to_release += (reserv_ids)
+            #Undo all reserves in reservations under the first sequence
+        print reserv_to_release
+        reserves = self.browse(cr, uid, reserv_to_release)
+        move_ids = [reserv['move_id'].id for reserv in reserves]
+        print move_ids
+        move_obj.do_unreserve(cr, uid, move_ids)
+
+        res_unlinked = []
+        for res in reserves:
+            # We try to regroup if someone has a related reserve
+            if res.splitted_reservations:
+                res_unlinked += res.regroup()
+
+        new_res = [x for x in reserves if x not in res_unlinked]
+
+        self.reserve(cr, uid, new_res)
+
+        return True
+
+    def regroup (self, cr, uid,ids, context=None):
+        reservations = self.browse(cr, uid, ids, context=context)
+        res_to_unlink = []
+        for reservation in reservations:
+            new_qty = reservation.product_uom_qty
+            for related in reservation.splitted_reservations:
+                new_qty += related.product_uom_qty
+                res_to_unlink.append(related.id)
+            reservation.write({'product_uom_qty': new_qty})
+        if (res_to_unlink):
+            self.unlink(cr, uid, res_to_unlink)
+        return res_to_unlink
 
     def reserve(self, cr, uid, ids, context=None):
         """ Confirm a reservation
@@ -100,13 +184,59 @@ class stock_reservation(orm.Model):
         """
         move_obj = self.pool.get('stock.move')
         reservations = self.browse(cr, uid, ids, context=context)
-        move_ids = [reserv.move_id.id for reserv in reservations]
-        move_obj.write(cr, uid, move_ids,
-                       {'date_expected': fields.datetime.now()},
-                       context=context)
-        move_obj.action_confirm(cr, uid, move_ids, context=context)
-        move_obj.force_assign(cr, uid, move_ids, context=context)
+
+        move_confirm_ids =[]
+        reservation_split_ids = []
+
+        for reservation in reservations:
+            if reservation.product_id.virtual_available >= 0:
+                move_confirm_ids.append(reservation.move_id.id)
+            else:
+                if reservation.product_id.virtual_available + reservation.product_uom_qty > 0:
+                    reservation_split_ids.append(reservation.id)
+                else:
+                    move_obj.write(cr, uid,reservation.move_id.id,
+                           {'date_expected': fields.datetime.now()},
+                           context=context)
+                    move_obj.action_confirm(cr, uid, reservation.move_id.id, context=context)
+        if move_confirm_ids:
+            move_obj.action_confirm(cr, uid, move_confirm_ids, context=context)
+            move_obj.action_assign(cr, uid, move_confirm_ids, context=context)
+
+            move_obj.write(cr, uid, move_confirm_ids,
+                           {'date_expected': fields.datetime.now()},
+                           context=context)
+        if reservation_split_ids:
+            self.split_reserve(cr, uid, reservation_split_ids)
+
         return True
+
+
+
+    def split_reserve(self, cr, uid,ids, context=None):
+        reservations = self.browse(cr, uid, ids, context=context)
+        for reservation in reservations:
+            qty_not_confirmed = -reservation.product_id.virtual_available
+            reservation.write({'product_uom_qty': reservation.product_uom_qty - qty_not_confirmed},
+                           context=context)
+            reservation.reserve()
+
+            # New reservation for the quantity not assigned
+            new_vals = {
+                'product_id': reservation.product_id.id,
+                'product_uom_qty': qty_not_confirmed,
+                'date_validity': reservation.date_validity,
+                'location_id': reservation.location_id.id,
+                'location_dest_id': reservation.location_dest_id.id,
+                'note ': reservation.note,
+                'name': reservation.name,
+                'product_uom': reservation.product_uom.id,
+                'reservation_id': reservation.id,
+            }
+            split_reservation_id = self.create(cr, uid, new_vals, context)
+            self.reserve(cr, uid, [split_reservation_id])
+
+
 
     def release(self, cr, uid, ids, context=None):
         if isinstance(ids, (int, long)):
@@ -115,6 +245,8 @@ class stock_reservation(orm.Model):
                                  context=context, load='_classic_write')
         move_obj = self.pool.get('stock.move')
         move_ids = [reserv['move_id'] for reserv in reservations]
+        #Unreserve the quant
+
         move_obj.action_cancel(cr, uid, move_ids, context=context)
         return True
 
@@ -130,7 +262,13 @@ class stock_reservation(orm.Model):
 
     def unlink(self, cr, uid, ids, context=None):
         """ Release the reservation before the unlink """
-        self.release(cr, uid, ids, context=context)
+
+        reservations = self.read(cr, uid, ids, ['move_id'],
+                                 context=context, load='_classic_write')
+        move_obj = self.pool.get('stock.move')
+        move_ids = [reserv['move_id'] for reserv in reservations]
+        move_obj.do_unreserve (cr, uid, move_ids)
+        #self.release(cr, uid, ids, context=context)
         return super(stock_reservation, self).unlink(cr, uid, ids,
                                                      context=context)
 

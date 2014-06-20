@@ -26,10 +26,10 @@
                                 <field name="product_id"
                                     on_change="onchange_product_id(product_id)"
                                     />
-                                <label for="product_qty" />
+                                <label for="product_uom_qty" />
                                 <div>
-                                    <field name="product_qty"
-                                        on_change="onchange_quantity(product_id, product_qty)"
+                                    <field name="product_uom_qty"
+                                        on_change="onchange_quantity(product_id, product_uom_qty)"
                                         class="oe_inline"/>
                                     <field name="product_uom"
                                         groups="product.group_uom" class="oe_inline"/>
@@ -46,8 +46,12 @@
                                 <field name="location_id"/>
                                 <field name="location_dest_id"/>
                             </group>
-                            <group name="note" string="Notes">
+                            <group name="note" string="Notes" >
                                 <field name="note" nolabel="1"/>
+                            </group>
+                            <newline/>
+                            <group name="splitted" string="Relates reservations" colspan="4">
+                                <field name="splitted_reservations" nolabel="1"/>
                             </group>
                         </group>
                     </sheet>
@@ -60,11 +64,12 @@
             <field name="model">stock.reservation</field>
             <field name="arch" type="xml">
                 <tree string="Stock Reservations" version="7.0"
-                    colors="blue:state == 'draft';grey:state == 'cancel'" >
+                    colors="blue:state == 'draft';grey:state == 'cancel';red:state == 'confirmed' ;green:state == 'assigned'" >
+                    <field name="sequence" />
                     <field name="name" />
                     <field name="product_id" />
                     <field name="move_id" />
-                    <field name="product_qty" sum="Total" />
+                    <field name="product_uom_qty" sum="Total" />
                     <field name="product_uom" />
                     <field name="date_validity" />
                     <field name="state"/>
@@ -88,6 +93,9 @@
                     <filter name="draft" string="Draft"
                         domain="[('state', '=', 'draft')]"
                         help="Not already reserved"/>
+                    <filter name="waiting" string="Waiting"
+                        domain="[('state', '=', 'confirmed')]"
+                        help="Moves are waiting for product."/>
                     <filter name="reserved" string="Reserved"
                         domain="[('state', '=', 'assigned')]"
                         help="Moves are reserved."/>
@@ -121,6 +129,7 @@
             <field name="search_view_id" ref="view_stock_reservation_search"/>
             <field name="context">{'search_default_draft': 1,
                                    'search_default_reserved': 1,
+                                   'search_default_waiting': 1,
                                    'search_default_groupby_product': 1}</field>
             <field name="help" type="html">
                 <p class="oe_view_nocontent_create">
