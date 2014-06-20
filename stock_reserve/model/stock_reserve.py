@@ -145,23 +145,40 @@ class stock_reservation(osv.osv):
 
             reserv_to_release += (reserv_ids)
             #Undo all reserves in reservations under the first sequence
+        print "reservas a liberar"
         print reserv_to_release
+        self.do_complete_release(cr, uid, reserv_to_release)
         reserves = self.browse(cr, uid, reserv_to_release)
-        move_ids = [reserv['move_id'].id for reserv in reserves]
-        print move_ids
-        move_obj.do_unreserve(cr, uid, move_ids)
+        # move_ids = [reserv['move_id'].id for reserv in reserves]
+        # print move_ids
+        # move_obj.do_unreserve(cr, uid, move_ids)
 
         res_unlinked = []
         for res in reserves:
             # We try to regroup if someone has a related reserve
             if res.splitted_reservations:
+                # Group reserves and return the unlinked reserves
                 res_unlinked += res.regroup()
-
-        new_res = [x for x in reserves if x not in res_unlinked]
-
+        #cr.commit()
+        new_res = [x for x in reserv_to_release if x not in res_unlinked]
+        print "Reservas a asignar"
+        print new_res
+        self.write(cr, uid, new_res, {'state': 'cancel'}, context=context)
         self.reserve(cr, uid, new_res)
 
         return True
+
+    def do_complete_release(self, cr, uid, ids, context=None):
+        quant_obj = self.pool.get("stock.quant")
+        for reserve in self.browse(cr, uid, ids, context=context):
+            if reserve.state in ('done', 'cancel'):
+                raise osv.except_osv(_('Operation Forbidden!'), _('Cannot unreserve a done reserve'))
+            quant_obj.quants_unreserve(cr, uid, reserve.move_id, context=context)
+            print "libera"
+            print reserve.id
+            self.write(cr, uid, [reserve.id], {'state': 'draft'}, context=context)
+            reserve.refresh()
+
 
     def regroup (self, cr, uid,ids, context=None):
         reservations = self.browse(cr, uid, ids, context=context)
@@ -189,23 +206,29 @@ class stock_reservation(osv.osv):
         reservation_split_ids = []
 
         for reservation in reservations:
-            if reservation.product_id.virtual_available >= 0:
-                move_confirm_ids.append(reservation.move_id.id)
+            reservation.refresh()
+            print reservation.sequence
+            print "DISPONIBLE"
+            print reservation.product_id.virtual_available
+            if reservation.state == 'cancel':
+                available = reservation.product_id.virtual_available - reservation.product_uom_qty
             else:
-                if reservation.product_id.virtual_available + reservation.product_uom_qty > 0:
+                available = reservation.product_id.virtual_available
+            if available >= 0:
+                move_obj.action_confirm(cr, uid, [reservation.move_id.id], context=context)
+                move_obj.action_assign(cr, uid, [reservation.move_id.id], context=context)
+                move_obj.write(cr, uid, reservation.move_id.id,
+                           {'date_expected': fields.datetime.now()},
+                           context=context)
+            else:
+                if available + reservation.product_uom_qty > 0:
                     reservation_split_ids.append(reservation.id)
                 else:
                     move_obj.write(cr, uid,reservation.move_id.id,
                            {'date_expected': fields.datetime.now()},
                            context=context)
                     move_obj.action_confirm(cr, uid, reservation.move_id.id, context=context)
-        if move_confirm_ids:
-            move_obj.action_confirm(cr, uid, move_confirm_ids, context=context)
-            move_obj.action_assign(cr, uid, move_confirm_ids, context=context)
 
-            move_obj.write(cr, uid, move_confirm_ids,
-                           {'date_expected': fields.datetime.now()},
-                           context=context)
         if reservation_split_ids:
             self.split_reserve(cr, uid, reservation_split_ids)
 
@@ -216,7 +239,12 @@ class stock_reservation(osv.osv):
     def split_reserve(self, cr, uid,ids, context=None):
         reservations = self.browse(cr, uid, ids, context=context)
         for reservation in reservations:
-            qty_not_confirmed = -reservation.product_id.virtual_available
+            if reservation.state == 'cancel':
+                available = reservation.product_id.virtual_available - reservation.product_uom_qty
+            else:
+                available = reservation.product_id.virtual_available
+
+            qty_not_confirmed = -available
             reservation.write({'product_uom_qty': reservation.product_uom_qty - qty_not_confirmed},
                            context=context)
             reservation.reserve()
@@ -268,7 +296,9 @@ class stock_reservation(osv.osv):
         move_obj = self.pool.get('stock.move')
         move_ids = [reserv['move_id'] for reserv in reservations]
         move_obj.do_unreserve (cr, uid, move_ids)
+        move_obj.write(cr, uid, move_ids, {'state': 'draft'}, context=context)
         #self.release(cr, uid, ids, context=context)
+        move_obj.unlink(cr, uid, move_ids, context=context)
         return super(stock_reservation, self).unlink(cr, uid, ids,
                                                      context=context)
 
