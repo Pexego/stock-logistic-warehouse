@@ -56,6 +56,7 @@ insufficient at the order date, you may want to install the
  'data': ['wizard/sale_stock_reserve_view.xml',
           'view/sale.xml',
           'view/stock_reserve.xml',
+          'workflow/sale_workflow.xml'
           ],
  'auto_install': False,
  'test': ['test/sale_reserve.yml',

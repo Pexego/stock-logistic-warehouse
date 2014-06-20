@@ -7,6 +7,12 @@
             <field name="model">sale.order</field>
             <field name="inherit_id" ref="sale_stock.view_order_form_inherit"/>
             <field name="arch" type="xml">
+                <xpath expr="/form/header/button[@name='action_button_confirm'][@states='draft']" position="replace">
+                    <button name="action_button_confirm" states="reserve" class="oe_highlight" string="Confirm Sale" type="object" groups="base.group_user"/>
+                </xpath>
+                <xpath expr="/form/header/button[@name='action_button_confirm'][@states='sent']" position="replace"/>
+
+
                 <button name="action_quotation_send" position="before">
                     <field name="is_stock_reservable" invisible="1"/>
                     <button name="%(action_sale_stock_reserve)d"
@@ -14,6 +20,13 @@
                         string="Reserve Stock"
                         help="Pre-book products from stock"
                         attrs="{'invisible': [('is_stock_reservable', '=', False)]}"
+                        />
+                </button>
+
+                <button name="action_quotation_send" position="after">
+                    <button name="order_reserve"
+                        string="Reserve Stock"
+                        states="draft,sent"
                         />
                 </button>
 
