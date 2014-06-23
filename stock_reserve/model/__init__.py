@@ -21,3 +21,4 @@
 
 from . import stock_reserve
 from . import product
+from . import stock_move

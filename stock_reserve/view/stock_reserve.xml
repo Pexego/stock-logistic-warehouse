@@ -73,7 +73,7 @@
             <field name="arch" type="xml">
                 <tree string="Stock Reservations" version="7.0"
                     colors="blue:state == 'draft';grey:state == 'cancel';red:state == 'confirmed' ;green:state == 'assigned'" >
-                    <field name="sequence" />
+                    <field name="sequence" widget="handle"/>
                     <field name="name" />
                     <field name="product_id" />
                     <field name="move_id" />
