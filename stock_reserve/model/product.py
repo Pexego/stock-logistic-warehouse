@@ -35,6 +35,20 @@ class product_product(orm.Model):
         action = act_obj.read(cr, uid, action_id, context=context)
         action['context'] = {'search_default_draft': 1,
                              'search_default_reserved': 1,
+                             'search_default_waiting': 1,
                              'default_product_id': ids[0],
                              'search_default_product_id': ids[0]}
         return action
+
+    def _get_reserves_qty(self, cr, uid, ids, field_name, args, context=None):
+        ret = {}
+        res_obj = self.pool.get('stock.reservation')
+        for prod in self.browse(cr, uid, ids, context=context):
+            res_ids = res_obj.search(cr, uid, [('product_id', '=', prod.id), ('state', 'not in', ['cancel', 'done'])], context=context)
+            res = res_obj.browse(cr, uid, res_ids, context=context)
+            ret[prod.id] = sum([x.product_uom_qty for x in res])
+        return ret
+
+    _columns = {
+        'reserves_count': fields.function(_get_reserves_qty, type="float"),
+    }

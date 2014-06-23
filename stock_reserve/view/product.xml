@@ -2,15 +2,37 @@
 <openerp>
     <data noupdate="0">
 
-        <record model="ir.ui.view" id="product_form_view">
+        <record model="ir.ui.view" id="product_form_reservation_view">
             <field name="name">product.product.form.reserve</field>
             <field name="model">product.product</field>
             <field name="inherit_id" ref="stock.product_form_view_procurement_button"/>
             <field name="arch" type="xml">
-                <xpath expr="//div[@name='buttons']" position="inside">
-                    <button string="Stock Reservations"
+               <xpath expr="//div[@name='buttons']" position="inside">
+                    <button
+                        class="oe_stat_button"
+                        icon="fa-cogs"
                         name="open_stock_reservation"
-                        type="object"/>
+                        type="object">
+                        <field string="Reservations" name="reserves_count" widget="statinfo" />
+                   </button>
+                </xpath>
+            </field>
+        </record>
+
+
+        <record model="ir.ui.view" id="product_kanban_reserve_view">
+            <field name="name">Product Kanban Reserve</field>
+            <field name="model">product.product</field>
+            <field name="inherit_id" ref="product.product_kanban_view"/>
+            <field name="arch" type="xml">
+                <field name="lst_price" position="after">
+                    <field name="reserves_count"/>
+                </field>
+                <xpath expr="//div[@name='tags']" position="inside">
+                    <a name="open_stock_reservation" type="object" t-if="record.reserves_count.raw_value&gt;1">
+                        <t t-esc="record.reserves_count.value"/> Reservations
+                    </a>
+
                 </xpath>
             </field>
         </record>

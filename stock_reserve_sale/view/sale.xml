@@ -12,19 +12,19 @@
                 </xpath>
                 <xpath expr="/form/header/button[@name='action_button_confirm'][@states='sent']" position="replace"/>
 
-
-                <button name="action_quotation_send" position="before">
-
-                    <button name="%(action_sale_stock_reserve)d"
-                        type="action"
-                        string="Reserve Stock"
-                        help="Pre-book products from stock"
-
-                        />
+                <button name="action_quotation_send" position="replace">
+                    <button name="action_quotation_send" string="Send by Email" type="object" states="draft, reserve" class="oe_highlight" groups="base.group_user"/>
+                </button>
+                <button name="print_quotation" position="replace">
+                    <button name="print_quotation" string="Print" type="object" states="draft,reserve" class="oe_highlight" groups="base.group_user"/>
+                </button>
+                <button name="cancel" position="replace">
+                    <button name="cancel" states="draft,sent,reserve" string="Cancel Quotation" groups="base.group_user"/>
                 </button>
 
                 <button name="action_quotation_send" position="after">
                     <button name="order_reserve"
+                        type="object"
                         string="Reserve Stock"
                         states="draft,sent"
                         />

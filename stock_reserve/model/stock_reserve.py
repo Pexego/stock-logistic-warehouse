@@ -52,7 +52,15 @@ class stock_reservation(osv.osv):
     _name = 'stock.reservation'
     _description = 'Stock Reservation'
     _inherits = {'stock.move': 'move_id'}
+    _inherit = ['mail.thread', 'ir.needaction_mixin']
     _order = "sequence asc"
+
+    _track = {
+        'state': {
+            'reserve.mt_reserve_confirmed': lambda self, cr, uid, obj, ctx=None: obj.state in ['confirmed'],
+            'reserve.mt_reserve_assigned': lambda self, cr, uid, obj, ctx=None: obj.state in ['assigned']
+        },
+    }
 
     def _new_sequence (self, cr, uid, context=None):
         query = "SELECT MAX(sequence)  FROM stock_reservation "
@@ -183,6 +191,8 @@ class stock_reservation(osv.osv):
 
             move_obj.action_confirm(cr, uid, reservation.move_id.id, context=context)
             move_obj.action_assign(cr, uid, [reservation.move_id.id], context=context)
+            reservation.refresh()
+            self.message_post(cr, uid, [reservation.id], body=_("Reserva modificada. Estado '%s'") % reservation.state, context=context)
 
         return True
 
@@ -201,6 +211,7 @@ class stock_reservation(osv.osv):
         print "cancel move"
         print move_ids
         move_obj.action_cancel(cr, uid, move_ids, context=context)
+        self.message_post(cr, uid, ids, body=_("Reserva liberada."), context=context)
         return True
 
     def release_validity_exceeded(self, cr, uid, ids=None, context=None):

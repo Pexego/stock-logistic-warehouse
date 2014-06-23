@@ -65,6 +65,12 @@ class sale_order(orm.Model):
         'partner_shipping_id': fields.many2one('res.partner', 'Delivery Address', readonly=True, required=True, states={'draft': [('readonly', False)], 'sent': [('readonly', False)], 'reserve': [('readonly', False)]}, help="Delivery address for current sales order."),
     }
 
+    def order_reserve(self, cr, uid, ids, context=None):
+        self.write(cr, uid, ids, {'state': 'reserve'})
+        line_ids = [line.id for order in self.browse(cr, uid, ids, context=context) for line in order.order_line]
+        self.pool.get('sale.order.line').stock_reserve(cr, uid, line_ids, context=context)
+        return True
+
     def release_all_stock_reservation(self, cr, uid, ids, context=None):
         sales = self.browse(cr, uid, ids, context=context)
         line_ids = [line.id for sale in sales for line in sale.order_line]
@@ -72,17 +78,46 @@ class sale_order(orm.Model):
         line_obj.release_stock_reservation(cr, uid, line_ids, context=context)
         return True
 
-    def action_button_confirm(self, cr, uid, ids, context=None):
+    def action_cancel(self, cr, uid, ids, context=None):
+        res = super(sale_order, self).action_cancel(
+            cr, uid, ids, context=context)
         self.release_all_stock_reservation(cr, uid, ids, context=context)
+
+    def action_button_confirm(self, cr, uid, ids, context=None):
+        #self.release_all_stock_reservation(cr, uid, ids, context=context)
         res = super(sale_order, self).action_button_confirm(
             cr, uid, ids, context=context)
 
-        # Assign directly the picking for not loosing the previous reserves.
         picking_ids = []
+        move_ids = []
+        move_obj = self.pool.get('stock.move')
+        reservation_obj = self.pool.get('stock.reservation')
         for order in self.browse(cr, uid, ids, context=context):
             picking_ids += [pick.id for pick in order.picking_ids]
+            pickings = self.pool.get('stock.picking').browse (cr, uid, picking_ids)
+            for picking in pickings:
+                move_ids += [move.id for move in picking.move_lines]
+        reservation_ids = self.get_reservations(cr, uid, ids, context=context)
+        for reservation in reservation_obj.browse(cr, uid, reservation_ids, context=context):
+            moves = move_obj.browse(cr, uid, move_ids)
+            for move in moves:
+                print move.product_id.name
+
+            move_id_change = move_obj.search(cr, uid, [('id', 'in', move_ids), ('product_id', '=', reservation.product_id.id)])[0]
+            prev_move = reservation.move_id
+            reservation_obj.write(cr, uid, reservation.id, {'move_id': move_id_change})
+            move_obj.action_cancel(cr, uid, [prev_move.id], context=context)
+            move_obj.unlink(cr, uid, [prev_move.id], context=context)
         self.pool.get('stock.picking').action_assign(cr, uid, picking_ids, context=context)
         return res
+
+    def get_reservations(self, cr, uid, ids, context=None):
+        sales = self.browse(cr, uid, ids, context=context)
+        line_ids = [line.id for sale in sales for line in sale.order_line]
+        lines = self.pool.get('sale.order.line').browse(cr, uid, line_ids, context=context)
+        reserv_ids = [reserv.id for line in lines
+                      for reserv in line.reservation_ids]
+        return reserv_ids
 
     def action_cancel(self, cr, uid, ids, context=None):
         self.release_all_stock_reservation(cr, uid, ids, context=context)
@@ -161,24 +196,29 @@ class sale_order_line(orm.Model):
         res = super(sale_order_line, self).write(cr, uid, ids, vals, context=context)
         if test_update:
             for line in self.browse(cr, uid, ids, context=context):
-                if line.reservation_ids:
-                    for reservation in line.reservation_ids:
-                        reservation.write(
-                            {'product_id': line.product_id.id  ,
-                             'product_uom': line.product_uom.id,
-                             'price_unit': line.price_unit,
-                             'product_uom_qty': line.product_uom_qty,
-                             }
-                        )
+                if line.order_id.state in ['reserve', ]:
+                    if line.reservation_ids:
+                        for reservation in line.reservation_ids:
+                            reservation.write(
+                                {'product_id': line.product_id.id  ,
+                                 'product_uom': line.product_uom.id,
+                                 'price_unit': line.price_unit,
+                                 'product_uom_qty': line.product_uom_qty,
+                                 }
+                            )
             self.stock_reserve(cr, uid, ids)
         return res
 
+
+
+
     def create(self, cr, uid, vals, context=None):
 
-        ids = super(sale_order_line, self).create(cr, uid, vals, context=context)
+        id = super(sale_order_line, self).create(cr, uid, vals, context=context)
         print "reserva en create"
-        self.stock_reserve(cr, uid, [ids])
-        return ids
+        if self.browse(cr, uid, id,context=context).order_id.state in ['reserve,']:
+            self.stock_reserve(cr, uid, [id])
+        return id
 
 
     def _prepare_stock_reservation(self, cr, uid, line, context=None):
@@ -208,4 +248,7 @@ class sale_order_line(orm.Model):
                                                    context=context)
                 reserv_id = reserv_obj.create(cr, uid, vals, context=context)
                 reserv_obj.reserve(cr, uid, [reserv_id], context=context)
+                reserv = reserv_obj.browse(cr, uid, reserv_id, context=context)
+                follower_ids = [line.order_id.user_id.partner_id.id]
+                reserv_obj.message_subscribe(cr, uid, [reserv_id], follower_ids, context=context)
         return True
