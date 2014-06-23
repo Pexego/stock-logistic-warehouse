@@ -43,18 +43,7 @@ class sale_order(orm.Model):
         return result
 
     _columns = {
-        'has_stock_reservation': fields.function(
-            _stock_reservation,
-            type='boolean',
-            readonly=True,
-            multi='stock_reservation',
-            string='Has Stock Reservations'),
-        'is_stock_reservable': fields.function(
-            _stock_reservation,
-            type='boolean',
-            readonly=True,
-            multi='stock_reservation',
-            string='Can Have Stock Reservations'),
+
         'state': fields.selection([
             ('draft', 'Draft Quotation'),
             ('sent', 'Quotation Sent'),
@@ -71,6 +60,9 @@ class sale_order(orm.Model):
               in the invoice validation (Invoice Exception) or in the picking list process (Shipping Exception).\nThe 'Waiting Schedule' status is set when the invoice is confirmed\
                but waiting for the scheduler to run on the order date.", select=True),
         'order_line': fields.one2many('sale.order.line', 'order_id', 'Order Lines', readonly=True, states={'draft': [('readonly', False)], 'sent': [('readonly', False)], 'reserve': [('readonly', False)]}),
+        'partner_id': fields.many2one('res.partner', 'Customer', readonly=True, states={'draft': [('readonly', False)], 'sent': [('readonly', False)], 'reserve': [('readonly', False)]}, required=True, change_default=True, select=True, track_visibility='always'),
+        'partner_invoice_id': fields.many2one('res.partner', 'Invoice Address', readonly=True, required=True, states={'draft': [('readonly', False)], 'sent': [('readonly', False)], 'reserve': [('readonly', False)]}, help="Invoice address for current sales order."),
+        'partner_shipping_id': fields.many2one('res.partner', 'Delivery Address', readonly=True, required=True, states={'draft': [('readonly', False)], 'sent': [('readonly', False)], 'reserve': [('readonly', False)]}, help="Delivery address for current sales order."),
     }
 
     def release_all_stock_reservation(self, cr, uid, ids, context=None):
@@ -82,8 +74,15 @@ class sale_order(orm.Model):
 
     def action_button_confirm(self, cr, uid, ids, context=None):
         self.release_all_stock_reservation(cr, uid, ids, context=context)
-        return super(sale_order, self).action_button_confirm(
+        res = super(sale_order, self).action_button_confirm(
             cr, uid, ids, context=context)
+
+        # Assign directly the picking for not loosing the previous reserves.
+        picking_ids = []
+        for order in self.browse(cr, uid, ids, context=context):
+            picking_ids += [pick.id for pick in order.picking_ids]
+        self.pool.get('stock.picking').action_assign(cr, uid, picking_ids, context=context)
+        return res
 
     def action_cancel(self, cr, uid, ids, context=None):
         self.release_all_stock_reservation(cr, uid, ids, context=context)
@@ -95,17 +94,8 @@ class sale_order_line(orm.Model):
     _inherit = 'sale.order.line'
 
     def _is_stock_reservable(self, cr, uid, ids, fields, args, context=None):
-        result = {}.fromkeys(ids, False)
-        for line in self.browse(cr, uid, ids, context=context):
-            if line.state != 'draft':
-                continue
-            if line.type == 'make_to_order':
-                continue
-            if (not line.product_id or line.product_id.type == 'service'):
-                continue
-            if not line.reservation_ids:
-                result[line.id] = True
-        return result
+
+        return True
 
     _columns = {
         'reservation_ids': fields.one2many(
@@ -163,39 +153,59 @@ class sale_order_line(orm.Model):
         return result
 
     def write(self, cr, uid, ids, vals, context=None):
-        block_on_reserve = ('product_id',  'product_uom', 'product_uos',
-                            'type')
-        update_on_reserve = ('price_unit', 'product_uom_qty', 'product_uos_qty')
+
+        update_on_reserve = ('product_id', 'product_uom', 'price_unit', 'product_uom_qty')
         keys = set(vals.keys())
-        test_block = keys.intersection(block_on_reserve)
         test_update = keys.intersection(update_on_reserve)
-        if test_block:
-            for line in self.browse(cr, uid, ids, context=context):
-                if not line.reservation_ids:
-                    continue
-                raise orm.except_orm(
-                    _('Error'),
-                    _('You cannot change the product or unit of measure '
-                      'of lines with a stock reservation. '
-                      'Release the reservation '
-                      'before changing the product.'))
+
         res = super(sale_order_line, self).write(cr, uid, ids, vals, context=context)
         if test_update:
             for line in self.browse(cr, uid, ids, context=context):
-                if not line.reservation_ids:
-                    continue
-                if len(line.reservation_ids) > 1:
-                    raise orm.except_orm(
-                        _('Error'),
-                        _('Several stock reservations are linked with the '
-                          'line. Impossible to adjust their quantity. '
-                          'Please release the reservation '
-                          'before changing the quantity.'))
-
-                line.reservation_ids[0].write(
-                    {'price_unit': line.price_unit,
-                     'product_qty': line.product_uom_qty,
-                     'product_uos_qty': line.product_uos_qty,
-                     }
-                )
+                if line.reservation_ids:
+                    for reservation in line.reservation_ids:
+                        reservation.write(
+                            {'product_id': line.product_id.id  ,
+                             'product_uom': line.product_uom.id,
+                             'price_unit': line.price_unit,
+                             'product_uom_qty': line.product_uom_qty,
+                             }
+                        )
+            self.stock_reserve(cr, uid, ids)
         return res
+
+    def create(self, cr, uid, vals, context=None):
+
+        ids = super(sale_order_line, self).create(cr, uid, vals, context=context)
+        print "reserva en create"
+        self.stock_reserve(cr, uid, [ids])
+        return ids
+
+
+    def _prepare_stock_reservation(self, cr, uid, line, context=None):
+        product_uos = line.product_uos.id if line.product_uos else False
+        return {'product_id': line.product_id.id,
+                'product_uom': line.product_uom.id,
+                'product_uom_qty': line.product_uom_qty,
+                'date_validity': False,
+                'name': "{} ({})".format(line.order_id.name, line.name),
+                'location_id': line.order_id.warehouse_id.lot_stock_id.id,
+                'price_unit': line.price_unit,
+                'sale_line_id': line.id,
+                }
+
+    def stock_reserve(self, cr, uid, ids, context=None):
+        print "stock reserve en linea"
+        reserv_obj = self.pool.get('stock.reservation')
+        line_obj = self.pool.get('sale.order.line')
+
+        lines = line_obj.browse(cr, uid, ids, context=context)
+        for line in lines:
+            if line.reservation_ids:
+                for reserve in line.reservation_ids:
+                    reserve.reassign()
+            else:
+                vals = self._prepare_stock_reservation(cr, uid, line,
+                                                   context=context)
+                reserv_id = reserv_obj.create(cr, uid, vals, context=context)
+                reserv_obj.reserve(cr, uid, [reserv_id], context=context)
+        return True

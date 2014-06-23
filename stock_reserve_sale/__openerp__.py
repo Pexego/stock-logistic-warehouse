@@ -49,14 +49,15 @@ insufficient at the order date, you may want to install the
 `sale_exception_nostock` module.
 
 """,
- 'depends': ['sale_stock',
+ 'depends': ['sale',
+             'sale_stock',
              'stock_reserve',
              ],
  'demo': [],
  'data': ['wizard/sale_stock_reserve_view.xml',
           'view/sale.xml',
           'view/stock_reserve.xml',
-          'workflow/sale_workflow.xml'
+          #'workflow/sale_workflow.xml'
           ],
  'auto_install': False,
  'test': ['test/sale_reserve.yml',

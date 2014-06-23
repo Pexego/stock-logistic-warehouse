@@ -50,8 +50,12 @@
                                 <field name="note" nolabel="1"/>
                             </group>
                             <newline/>
-                            <group name="splitted" string="Relates reservations" colspan="4">
-                                <field name="splitted_reservations" nolabel="1"/>
+                            <group name="Availability"  string="Availability" >
+                                <field name="string_availability_info"/>
+                                <field name="availability"/>
+                            </group>
+                            <group name="Quants" string="Related Quants" >
+                                <field name="reserved_quant_ids" nolabel="1"/>
                             </group>
                         </group>
                     </sheet>
@@ -72,6 +76,8 @@
                     <field name="product_uom_qty" sum="Total" />
                     <field name="product_uom" />
                     <field name="date_validity" />
+                    <field name="string_availability_info"/>
+                    <field name="availability"/>
                     <field name="state"/>
                     <button name="reserve" type="object"
                         string="Reserve"

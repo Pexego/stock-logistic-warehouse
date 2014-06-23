@@ -14,12 +14,12 @@
 
 
                 <button name="action_quotation_send" position="before">
-                    <field name="is_stock_reservable" invisible="1"/>
+
                     <button name="%(action_sale_stock_reserve)d"
                         type="action"
                         string="Reserve Stock"
                         help="Pre-book products from stock"
-                        attrs="{'invisible': [('is_stock_reservable', '=', False)]}"
+
                         />
                 </button>
 
@@ -36,8 +36,8 @@
 
                 <xpath expr="//field[@name='order_line']/form//field[@name='state']" position="before">
                     <field name="reservation_ids" invisible="1"/>
-                    <button name="%(action_sale_stock_reserve)d"
-                        type="action"
+                    <button name="stock_reserve"
+                        type="object"
                         string="Reserve Stock"
                         attrs="{'invisible': ['|', ('reservation_ids', '!=', []),
                                                    ('state', '!=', 'draft')]}" />
@@ -50,12 +50,13 @@
 
                 <xpath expr="//field[@name='order_line']/tree/field[@name='price_subtotal']" position="after">
                     <field name="reservation_ids" invisible="1"/>
-                    <field name="is_stock_reservable" invisible="1"/>
-                    <button name="%(action_sale_stock_reserve)d"
-                        type="action"
+
+                    <button name="stock_reserve"
+                        type="object"
                         string="Reserve Stock"
                         icon="terp-locked"
-                        attrs="{'invisible': [('is_stock_reservable', '=', False)]}" />
+                        />
+
                     <button name="release_stock_reservation"
                         type="object"
                         string="Release Reservation"
@@ -63,18 +64,38 @@
                         attrs="{'invisible': [('reservation_ids', '=', [])]}" />
                 </xpath>
 
-                <field name="invoiced" position="before">
-                    <label for="has_stock_reservation"/>
-                    <div>
-                        <field name="has_stock_reservation"/>
-                        <button name="release_all_stock_reservation"
-                            string="cancel all"
-                            type="object" class="oe_link"
-                            attrs="{'invisible': [('has_stock_reservation', '=', False)]}"/>
-                    </div>
-                </field>
+
             </field>
         </record>
 
+
+
+
+        <!-- search by Salesteams -->
+        <record id="action_orders_reserve" model="ir.actions.act_window">
+            <field name="name">Sales Reserved</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">sale.order</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">tree,form,calendar,graph</field>
+            <field name="search_view_id" ref="sale.view_sales_order_filter"/>
+            <field name="domain">[('state','in',('reserve',))]</field>
+            <field name="context">{
+                    'search_default_my_sale_orders_filter': 1,
+                    'default_state': 'reserve',
+                }
+            </field>
+            <field name="help" type="html">
+              <p class="oe_view_nocontent_create">
+                Click to create a sale with reserved goods that can be converted into a sales
+                order.
+              </p><p>
+                OpenERP will help you efficiently handle the complete sales flow:
+                quotation, sales order, delivery, invoicing and payment.
+              </p>
+            </field>
+        </record>
+
+         <menuitem action="action_orders_reserve" id="menu_sale_order_reserve" parent="base.menu_sales" sequence="5" groups="base.group_sale_salesman,base.group_sale_manager"/>
     </data>
 </openerp>
