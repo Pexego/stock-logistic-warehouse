@@ -30,6 +30,18 @@
                         />
                 </button>
 
+                <xpath expr="/form/sheet/h1" position="after">
+                    <div class="oe_right oe_button_box" style="width: 300px;" name="buttons">
+                        <button
+                            class="oe_stat_button"
+                            icon="fa-cogs"
+                            name="open_stock_reservation"
+                            type="object"
+                            string="Reservations"
+                       />
+                    </div>
+                </xpath>
+
                 <field name="order_line" position="attributes">
                     <attribute name="options">{"reload_on_button": 1}</attribute>
                 </field>

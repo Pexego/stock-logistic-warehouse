@@ -30,7 +30,7 @@
                 </field>
                 <xpath expr="//div[@name='tags']" position="inside">
                     <a name="open_stock_reservation" type="object" t-if="record.reserves_count.raw_value&gt;1">
-                        <t t-esc="record.reserves_count.value"/> Reservations
+                        <t t-esc="record.reception_count.value"/> Reservations
                     </a>
 
                 </xpath>

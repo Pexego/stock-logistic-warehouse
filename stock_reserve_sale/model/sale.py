@@ -125,6 +125,28 @@ class sale_order(orm.Model):
             cr, uid, ids, context=context)
 
 
+    def get_product_ids(self, cr, uid, ids, context=None):
+        sales = self.browse(cr, uid, ids, context=context)
+        product_ids = [line.product_id.id for sale in sales for line in sale.order_line]
+        return  product_ids
+
+
+    def open_stock_reservation(self, cr, uid, ids, context=None):
+        assert len(ids) == 1, "Expected 1 ID, got %r" % ids
+        mod_obj = self.pool.get('ir.model.data')
+        act_obj = self.pool.get('ir.actions.act_window')
+        get_ref = mod_obj.get_object_reference
+        __, action_id = get_ref(cr, uid, 'stock_reserve',
+                                'action_stock_reservation')
+        product_ids = self.get_product_ids(cr, uid, ids)
+        action = act_obj.read(cr, uid, action_id, context=context)
+        action['domain'] = [('sale_id', 'in', ids)]
+        action['context'] = {'search_default_draft': 1,
+                             'search_default_reserved': 1,
+                             'search_default_waiting': 1,
+                            }
+        return action
+
 class sale_order_line(orm.Model):
     _inherit = 'sale.order.line'
 
@@ -252,3 +274,5 @@ class sale_order_line(orm.Model):
                 follower_ids = [line.order_id.user_id.partner_id.id]
                 reserv_obj.message_subscribe(cr, uid, [reserv_id], follower_ids, context=context)
         return True
+
+
