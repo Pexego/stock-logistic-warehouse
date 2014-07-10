@@ -249,7 +249,7 @@ class sale_order_line(orm.Model):
                 'product_uom': line.product_uom.id,
                 'product_uom_qty': line.product_uom_qty,
                 'date_validity': False,
-                'name': "{} ({})".format(line.order_id.name, line.name),
+                'name': u"{} ({})".format(line.order_id.name, line.name),
                 'location_id': line.order_id.warehouse_id.lot_stock_id.id,
                 'price_unit': line.price_unit,
                 'sale_line_id': line.id,
