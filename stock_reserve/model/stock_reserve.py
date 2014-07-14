@@ -67,7 +67,11 @@ class stock_reservation(osv.osv):
         cr.execute(query, ())
         regs = cr.fetchall()
         for reg in regs:
-             sequence = reg[0] + 1
+            if not reg[0]:
+                seq = 0
+            else:
+                seq = reg[0]
+            sequence = seq + 1
         return sequence
 
     _columns = {

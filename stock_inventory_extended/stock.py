@@ -24,17 +24,17 @@ from tools.translate import _
 
 class stock_inventory(osv.osv):
     _inherit = "stock.inventory"
-    
+
     _columns = {
         'comments':fields.text('Comments'),
     }
-    
+
     def action_confirm(self, cr, uid, ids, context=None):
         """ Confirm the inventory and writes its finished date
         @return: True
         """
         res = super(stock_inventory, self).action_confirm(cr, uid, ids, context)
-        
+
         if context is None:
             context = {}
         # to perform the correct inventory corrections we need analyze stock location by
@@ -65,13 +65,13 @@ class stock_inventory(osv.osv):
                     }
                     if change > 0:
                         value.update( {
-                            'product_qty': change,
+                            'product_uom_qty': change,
                             'location_id': location_id,
                             'location_dest_id': line.location_id.id,
                         })
                     else:
                         value.update( {
-                            'product_qty': -change,
+                            'product_uom_qty': -change,
                             'location_id': line.location_id.id,
                             'location_dest_id': location_id,
                         })
@@ -85,7 +85,7 @@ stock_inventory()
 
 class stock_inventory_line(osv.osv):
     _inherit = "stock.inventory.line"
-    
+
     _columns = {
         'date': fields.datetime('Date'),
         'note': fields.text('Notes'),

@@ -60,7 +60,7 @@ class sale_stock_reserve(orm.TransientModel):
         product_uos = line.product_uos.id if line.product_uos else False
         return {'product_id': line.product_id.id,
                 'product_uom': line.product_uom.id,
-                'product_qty': line.product_uom_qty,
+                'product_uom_qty': line.product_uom_qty,
                 'date_validity': form.date_validity,
                 'name': "{} ({})".format(line.order_id.name, line.name),
                 'location_id': form.location_id.id,

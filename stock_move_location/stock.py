@@ -73,7 +73,7 @@ class stock_inventory(osv.osv):
                     'product_uom': line.product_uom.id,
                     'prodlot_id': line.prod_lot_id.id,
                     'date': date,
-                    'product_qty': line.product_qty,
+                    'product_uom_qty': line.product_qty,
                     'location_id': line.location_id.id,
                     'location_dest_id': location_id,
                     'note': line.note or inv.comments or False,
