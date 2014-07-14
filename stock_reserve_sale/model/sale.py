@@ -78,10 +78,7 @@ class sale_order(orm.Model):
         line_obj.release_stock_reservation(cr, uid, line_ids, context=context)
         return True
 
-    def action_cancel(self, cr, uid, ids, context=None):
-        res = super(sale_order, self).action_cancel(
-            cr, uid, ids, context=context)
-        self.release_all_stock_reservation(cr, uid, ids, context=context)
+
 
     def action_button_confirm(self, cr, uid, ids, context=None):
         #self.release_all_stock_reservation(cr, uid, ids, context=context)
