@@ -216,7 +216,8 @@ class stock_reservation(osv.osv):
         print move_ids
         move_obj.action_cancel(cr, uid, move_ids, context=context)
         if ids:
-            self.message_post(cr, uid, ids, body=_("Reserva liberada."), context=context)
+            for id in ids:
+                self.message_post(cr, uid, id, body=_("Reserva liberada."), context=context)
         return True
 
     def release_validity_exceeded(self, cr, uid, ids=None, context=None):
