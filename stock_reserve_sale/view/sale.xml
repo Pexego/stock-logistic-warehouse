@@ -10,7 +10,10 @@
                 <xpath expr="/form/header/button[@name='action_button_confirm'][@states='draft']" position="replace">
                     <button name="action_button_confirm" states="reserve" class="oe_highlight" string="Confirm Sale" type="object" groups="base.group_user"/>
                 </xpath>
-                <xpath expr="/form/header/button[@name='action_button_confirm'][@states='sent']" position="replace"/>
+                <xpath expr="/form/header/button[@name='action_button_confirm'][@states='sent']" position="replace">
+                    <!-- Se añaden los botones ocultos para que no falle al heredar en otro modulo. -->
+                    <button name="action_button_confirm" states="sent" invisible="1"/>
+                </xpath>
 
                 <button name="action_quotation_send" position="replace">
                     <button name="action_quotation_send" string="Send by Email" type="object" states="draft, reserve" class="oe_highlight" groups="base.group_user"/>
