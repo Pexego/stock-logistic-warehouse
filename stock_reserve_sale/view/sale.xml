@@ -5,7 +5,7 @@
         <record id="view_order_form_reserve" model="ir.ui.view">
             <field name="name">sale.order.form.reserve</field>
             <field name="model">sale.order</field>
-            <field name="inherit_id" ref="sale_stock.view_order_form_inherit"/>
+            <field name="inherit_id" ref="sale.view_order_form"/>
             <field name="arch" type="xml">
                 <xpath expr="/form/header/button[@name='action_button_confirm'][@states='draft']" position="replace">
                     <button name="action_button_confirm" states="reserve" class="oe_highlight" string="Confirm Sale" type="object" groups="base.group_user"/>
