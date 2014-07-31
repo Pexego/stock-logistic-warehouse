@@ -67,7 +67,7 @@ class sale_order(orm.Model):
 
     def order_reserve(self, cr, uid, ids, context=None):
         self.write(cr, uid, ids, {'state': 'reserve'})
-        line_ids = [line.id for order in self.browse(cr, uid, ids, context=context) for line in order.order_line]
+        line_ids = [line.id for order in self.browse(cr, uid, ids, context=context) for line in order.order_line if line.product_id]
         self.pool.get('sale.order.line').stock_reserve(cr, uid, line_ids, context=context)
         return True
 
