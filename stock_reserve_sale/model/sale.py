@@ -148,8 +148,15 @@ class sale_order_line(orm.Model):
     _inherit = 'sale.order.line'
 
     def _is_stock_reservable(self, cr, uid, ids, fields, args, context=None):
+        res = {}
+        for line in self.browse(cr, uid, ids, context):
+            if line.product_id and \
+                    line.product_id.type in ['consu', 'service']:
+                res[line.id] = False
+                continue
+            res[line.id] = True
+        return res
 
-        return True
 
     _columns = {
         'reservation_ids': fields.one2many(
@@ -228,17 +235,14 @@ class sale_order_line(orm.Model):
             self.stock_reserve(cr, uid, ids)
         return res
 
-
-
-
     def create(self, cr, uid, vals, context=None):
 
         id = super(sale_order_line, self).create(cr, uid, vals, context=context)
         print "reserva en create"
-        if self.browse(cr, uid, id,context=context).order_id.state in ['reserve,']:
+        if self.browse(cr, uid, id,
+                       context=context).order_id.state in ['reserve,']:
             self.stock_reserve(cr, uid, [id])
         return id
-
 
     def _prepare_stock_reservation(self, cr, uid, line, context=None):
         product_uos = line.product_uos.id if line.product_uos else False
@@ -259,6 +263,8 @@ class sale_order_line(orm.Model):
 
         lines = line_obj.browse(cr, uid, ids, context=context)
         for line in lines:
+            if not line.is_stock_reservable:
+                continue
             if line.reservation_ids:
                 for reserve in line.reservation_ids:
                     reserve.reassign()
@@ -269,7 +275,6 @@ class sale_order_line(orm.Model):
                 reserv_obj.reserve(cr, uid, [reserv_id], context=context)
                 reserv = reserv_obj.browse(cr, uid, reserv_id, context=context)
                 follower_ids = [line.order_id.user_id.partner_id.id]
-                reserv_obj.message_subscribe(cr, uid, [reserv_id], follower_ids, context=context)
+                reserv_obj.message_subscribe(cr, uid, [reserv_id],
+                                             follower_ids, context=context)
         return True
-
-
