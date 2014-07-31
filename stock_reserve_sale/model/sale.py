@@ -100,11 +100,13 @@ class sale_order(orm.Model):
             for move in moves:
                 print move.product_id.name
 
-            move_id_change = move_obj.search(cr, uid, [('id', 'in', move_ids), ('product_id', '=', reservation.product_id.id)])[0]
-            prev_move = reservation.move_id
-            reservation_obj.write(cr, uid, reservation.id, {'move_id': move_id_change})
-            move_obj.action_cancel(cr, uid, [prev_move.id], context=context)
-            move_obj.unlink(cr, uid, [prev_move.id], context=context)
+            move_id_change = move_obj.search(cr, uid, [('id', 'in', move_ids), ('product_id', '=', reservation.product_id.id)])
+            if move_id_change:
+                move_id_change = move_id_change[0]
+                prev_move = reservation.move_id
+                reservation_obj.write(cr, uid, reservation.id, {'move_id': move_id_change})
+                move_obj.action_cancel(cr, uid, [prev_move.id], context=context)
+                move_obj.unlink(cr, uid, [prev_move.id], context=context)
         self.pool.get('stock.picking').action_assign(cr, uid, picking_ids, context=context)
         return res
 
