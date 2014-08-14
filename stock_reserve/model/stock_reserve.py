@@ -94,6 +94,7 @@ class stock_reservation(osv.osv):
                                                  'reservation_id',
                                                  'Reservation splitted',
                                                  readonly=True,),
+        'date_planned': fields.date('Date planned'),
     }
 
     def get_location_from_ref(self, cr, uid, ref, context=None):
