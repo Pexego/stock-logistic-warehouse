@@ -242,7 +242,7 @@ class sale_order_line(orm.Model):
         id = super(sale_order_line, self).create(cr, uid, vals, context=context)
         print "reserva en create"
         if self.browse(cr, uid, id,
-                       context=context).order_id.state in ['reserve,']:
+                       context=context).order_id.state in ['reserve', ]:
             self.stock_reserve(cr, uid, [id])
         return id
 
