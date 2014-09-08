@@ -187,33 +187,33 @@ class sale_order_line(orm.Model):
         reserv_obj.release(cr, uid, reserv_ids, context=context)
         return True
 
-    def product_id_change(self, cr, uid, ids, pricelist, product, qty=0,
-                          uom=False, qty_uos=0, uos=False, name='', partner_id=False,
-                          lang=False, update_tax=True, date_order=False, packaging=False, fiscal_position=False, flag=False, context=None):
-        result = super(sale_order_line, self).product_id_change(
-            cr, uid, ids, pricelist, product, qty=qty, uom=uom,
-            qty_uos=qty_uos, uos=uos, name=name, partner_id=partner_id,
-            lang=lang, update_tax=update_tax, date_order=date_order,
-            packaging=packaging, fiscal_position=fiscal_position,
-            flag=flag, context=context)
-        if not ids:  # warn only if we change an existing line
-            return result
-        assert len(ids) == 1, "Expected 1 ID, got %r" % ids
-        line = self.browse(cr, uid, ids[0], context=context)
-        if qty != line.product_uom_qty and line.reservation_ids:
-            msg = _("As you changed the quantity of the line, "
-                    "the quantity of the stock reservation will "
-                    "be automatically adjusted to %.2f.") % qty
-            msg += "\n\n"
-            result.setdefault('warning', {})
-            if result['warning'].get('message'):
-                result['warning']['message'] += msg
-            else:
-                result['warning'] = {
-                    'title': _('Configuration Error!'),
-                    'message': msg,
-                }
-        return result
+    # def product_id_change(self, cr, uid, ids, pricelist, product, qty=0,
+    #                       uom=False, qty_uos=0, uos=False, name='', partner_id=False,
+    #                       lang=False, update_tax=True, date_order=False, packaging=False, fiscal_position=False, flag=False, context=None):
+    #     result = super(sale_order_line, self).product_id_change(
+    #         cr, uid, ids, pricelist, product, qty=qty, uom=uom,
+    #         qty_uos=qty_uos, uos=uos, name=name, partner_id=partner_id,
+    #         lang=lang, update_tax=update_tax, date_order=date_order,
+    #         packaging=packaging, fiscal_position=fiscal_position,
+    #         flag=flag, context=context)
+    #     if not ids:  # warn only if we change an existing line
+    #         return result
+    #     assert len(ids) == 1, "Expected 1 ID, got %r" % ids
+    #     line = self.browse(cr, uid, ids[0], context=context)
+    #     if qty != line.product_uom_qty and line.reservation_ids:
+    #         msg = _("As you changed the quantity of the line, "
+    #                 "the quantity of the stock reservation will "
+    #                 "be automatically adjusted to %.2f.") % qty
+    #         msg += "\n\n"
+    #         result.setdefault('warning', {})
+    #         if result['warning'].get('message'):
+    #             result['warning']['message'] += msg
+    #         else:
+    #             result['warning'] = {
+    #                 'title': _('Configuration Error!'),
+    #                 'message': msg,
+    #             }
+    #     return result
 
     def write(self, cr, uid, ids, vals, context=None):
 
