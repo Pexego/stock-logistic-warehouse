@@ -139,15 +139,19 @@ class stock_reservation(osv.osv):
             ids = [ids]
         print context
         print vals
-        res = super(stock_reservation, self).write(cr, uid, ids, vals, context=context)
         print vals.get('sequence')
-        if vals.get('sequence', False):
-            if context.get('first', False):
-                if context['first'] == True:
-                    print "REASIGNA"
-                    print vals['sequence']
-
-                self.reassign(cr, uid, ids, context)
+        if vals.get('sequence', False) and context.get('first', False):
+            if context['first'] == True:
+                print "REASIGNA"
+                print vals['sequence']
+            old_sequences = {}
+            for reservation in self.browse(cr, uid, ids, context):
+                old_sequences[reservation.id] = reservation.sequence
+            context['sequences'] = old_sequences
+            res = super(stock_reservation, self).write(cr, uid, ids, vals, context=context)
+            self.reassign(cr, uid, ids, context)
+        else:
+            res = super(stock_reservation, self).write(cr, uid, ids, vals, context=context)
         return res
 
     def reassign(self, cr, uid, ids, context=None):
@@ -157,7 +161,14 @@ class stock_reservation(osv.osv):
         reservations = self.browse(cr, uid, ids, context=context)
         reserv_to_release=[]
         for reservation in reservations:
-            reserv_ids = self.search(cr, uid, [('sequence', '>=', reservation.sequence), ('product_id', '=', reservation.product_id.id), ('state', 'in', ['draft', 'confirmed', 'assigned'])])
+            old_sequence = context.get('sequences', False)
+            if old_sequence:
+                sequence = min(old_sequence[reservation.id], reservation.sequence)
+            else:
+                sequence = reservation.sequence
+            print "se reasigna a partir de secuencia"
+            print sequence
+            reserv_ids = self.search(cr, uid, [('sequence', '>=', sequence), ('product_id', '=', reservation.product_id.id), ('state', 'in', ['draft', 'confirmed', 'assigned'])])
 
             #Undo all reserves in reservations under the first sequence
         print "reservas a liberar"
