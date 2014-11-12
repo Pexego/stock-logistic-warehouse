@@ -65,6 +65,16 @@ class sale_order(orm.Model):
         'partner_shipping_id': fields.many2one('res.partner', 'Delivery Address', readonly=True, required=True, states={'draft': [('readonly', False)], 'sent': [('readonly', False)], 'reserve': [('readonly', False)]}, help="Delivery address for current sales order."),
     }
 
+    def create(self, cr, uid, vals, context=None):
+        id = super(sale_order, self).create(cr, uid, vals, context=context)
+        print "reserva en create"
+        context2 = dict(context)
+        context2.pop('default_state', False)
+        if self.browse(cr, uid, id,
+                       context=context).state in ['reserve', ]:
+            self.order_reserve(cr, uid, [id])
+        return id
+
     def order_reserve(self, cr, uid, ids, context=None):
         self.write(cr, uid, ids, {'state': 'reserve'})
         line_ids = [line.id for order in self.browse(cr, uid, ids, context=context) for line in order.order_line if line.product_id]
@@ -237,14 +247,14 @@ class sale_order_line(orm.Model):
             self.stock_reserve(cr, uid, ids)
         return res
 
-    def create(self, cr, uid, vals, context=None):
+    '''def create(self, cr, uid, vals, context=None):
 
         id = super(sale_order_line, self).create(cr, uid, vals, context=context)
         print "reserva en create"
         if self.browse(cr, uid, id,
                        context=context).order_id.state in ['reserve', ]:
             self.stock_reserve(cr, uid, [id])
-        return id
+        return id'''
 
     def _prepare_stock_reservation(self, cr, uid, line, context=None):
         product_uos = line.product_uos.id if line.product_uos else False
