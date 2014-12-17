@@ -1,0 +1,313 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+#   * stock_reserve
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 8.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2014-12-17 17:02+0000\n"
+"PO-Revision-Date: 2014-12-17 17:02+0000\n"
+"Last-Translator: <>\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: stock_reserve
+#: model:ir.actions.act_window,help:stock_reserve.action_stock_reservation
+msgid "<p class=\"oe_view_nocontent_create\">\n"
+"                    Click to create a stock reservation.\n"
+"                    </p><p>\n"
+"                    This menu allow you to prepare and reserve some quantities\n"
+"                    of products.\n"
+"                </p>\n"
+"            "
+msgstr "<p class=\"oe_view_nocontent_create\">\n"
+"                    Click to create a stock reservation.\n"
+"                    </p><p>\n"
+"                    This menu allow you to prepare and reserve some quantities\n"
+"                    of products.\n"
+"                </p>\n"
+"            "
+
+#. module: stock_reserve
+#: view:stock.reservation:stock_reserve.view_stock_reservation_form
+msgid "Availability"
+msgstr "Disponibilidad"
+
+#. module: stock_reserve
+#: code:addons/stock_reserve/model/stock_reserve.py:185
+#, python-format
+msgid "Cannot unreserve a done reserve"
+msgstr "No se puede eliminar una reserva finalizada"
+
+#. module: stock_reserve
+#: field:stock.reservation,create_uid:0
+msgid "Created by"
+msgstr "Created by"
+
+#. module: stock_reserve
+#: field:stock.reservation,create_date:0
+msgid "Created on"
+msgstr "Created on"
+
+#. module: stock_reserve
+#: help:stock.reservation,message_last_post:0
+msgid "Date of the last message posted on the record."
+msgstr "Date of the last message posted on the record."
+
+#. module: stock_reserve
+#: field:stock.reservation,date_planned:0
+msgid "Date planned"
+msgstr "Fecha planeada"
+
+#. module: stock_reserve
+#: view:stock.reservation:stock_reserve.view_stock_reservation_form
+msgid "Details"
+msgstr "Detalles"
+
+#. module: stock_reserve
+#: view:stock.reservation:stock_reserve.view_stock_reservation_search
+msgid "Draft"
+msgstr "Borrador"
+
+#. module: stock_reserve
+#: field:stock.reservation,message_follower_ids:0
+msgid "Followers"
+msgstr "Seguidores"
+
+#. module: stock_reserve
+#: help:stock.reservation,sequence:0
+msgid "Gives the priority in reservation."
+msgstr "Gives the priority in reservation."
+
+#. module: stock_reserve
+#: view:stock.reservation:stock_reserve.view_stock_reservation_search
+msgid "Group By..."
+msgstr "Agrupar por..."
+
+#. module: stock_reserve
+#: help:stock.reservation,message_summary:0
+msgid "Holds the Chatter summary (number of messages, ...). This summary is directly in html format in order to be inserted in kanban views."
+msgstr "Holds the Chatter summary (number of messages, ...). This summary is directly in html format in order to be inserted in kanban views."
+
+#. module: stock_reserve
+#: field:stock.reservation,id:0
+msgid "ID"
+msgstr "ID"
+
+#. module: stock_reserve
+#: help:stock.reservation,message_unread:0
+msgid "If checked new messages require your attention."
+msgstr "If checked new messages require your attention."
+
+#. module: stock_reserve
+#: field:stock.reservation,message_is_follower:0
+msgid "Is a Follower"
+msgstr "Is a Follower"
+
+#. module: stock_reserve
+#: field:stock.reservation,message_last_post:0
+msgid "Last Message Date"
+msgstr "Last Message Date"
+
+#. module: stock_reserve
+#: field:stock.reservation,write_uid:0
+msgid "Last Updated by"
+msgstr "Last Updated by"
+
+#. module: stock_reserve
+#: field:stock.reservation,write_date:0
+msgid "Last Updated on"
+msgstr "Last Updated on"
+
+#. module: stock_reserve
+#: view:stock.reservation:stock_reserve.view_stock_reservation_form
+msgid "Locations"
+msgstr "Localizaciones"
+
+#. module: stock_reserve
+#: field:stock.reservation,message_ids:0
+msgid "Messages"
+msgstr "Messages"
+
+#. module: stock_reserve
+#: help:stock.reservation,message_ids:0
+msgid "Messages and communication history"
+msgstr "Messages and communication history"
+
+#. module: stock_reserve
+#: view:stock.reservation:stock_reserve.view_stock_reservation_search
+msgid "Moves are reserved."
+msgstr "Los movimientos están reservados."
+
+#. module: stock_reserve
+#: view:stock.reservation:stock_reserve.view_stock_reservation_search
+msgid "Moves are waiting for product."
+msgstr "Los movimientos están esperando por un producto."
+
+#. module: stock_reserve
+#: view:stock.reservation:stock_reserve.view_stock_reservation_search
+msgid "Not already reserved"
+msgstr "Aún no está reservado"
+
+#. module: stock_reserve
+#: view:stock.reservation:stock_reserve.view_stock_reservation_form
+msgid "Notes"
+msgstr "Notas"
+
+#. module: stock_reserve
+#: code:addons/stock_reserve/model/stock_reserve.py:185
+#, python-format
+msgid "Operation Forbidden!"
+msgstr "Operación no permitida!"
+
+#. module: stock_reserve
+#: field:stock.reservation,reservation_id:0
+msgid "Parent reservation"
+msgstr "Reserva padre"
+
+#. module: stock_reserve
+#: model:ir.model,name:stock_reserve.model_product_product
+#: view:stock.reservation:stock_reserve.view_stock_reservation_search
+msgid "Product"
+msgstr "Producto"
+
+#. module: stock_reserve
+#: view:stock.reservation:stock_reserve.view_stock_reservation_search
+msgid "Product UoM"
+msgstr "UdM del producto"
+
+#. module: stock_reserve
+#: view:stock.reservation:stock_reserve.view_stock_reservation_form
+msgid "Related Quants"
+msgstr "Quants relacionados"
+
+#. module: stock_reserve
+#: view:stock.reservation:stock_reserve.view_stock_reservation_form
+#: view:stock.reservation:stock_reserve.view_stock_reservation_tree
+msgid "Release"
+msgstr "Liberar"
+
+#. module: stock_reserve
+#: view:stock.reservation:stock_reserve.view_stock_reservation_search
+msgid "Released"
+msgstr "Liberado"
+
+#. module: stock_reserve
+#: code:addons/stock_reserve/model/stock_reserve.py:232
+#, python-format
+msgid "Reserva liberada."
+msgstr "Reserva liberada."
+
+#. module: stock_reserve
+#: code:addons/stock_reserve/model/stock_reserve.py:211
+#, python-format
+msgid "Reserva modificada. Estado '%s'"
+msgstr "Reserva modificada. Estado '%s'"
+
+#. module: stock_reserve
+#: code:addons/stock_reserve/model/stock_reserve.py:294
+#: field:stock.reservation,move_id:0
+#, python-format
+msgid "Reservation Move"
+msgstr "Movimiento reservado"
+
+#. module: stock_reserve
+#: model:stock.location,name:stock_reserve.stock_location_reservation
+msgid "Reservation Stock"
+msgstr "Stock reservado"
+
+#. module: stock_reserve
+#: field:stock.reservation,splitted_reservations:0
+msgid "Reservation splitted"
+msgstr "Reservation splitted"
+
+#. module: stock_reserve
+#: view:product.product:stock_reserve.product_form_reservation_view
+#: view:product.product:stock_reserve.product_kanban_reserve_view
+msgid "Reservations"
+msgstr "Reservas"
+
+#. module: stock_reserve
+#: view:stock.reservation:stock_reserve.view_stock_reservation_search
+msgid "Reservations have been released."
+msgstr "Las reservas han sido liberadas."
+
+#. module: stock_reserve
+#: view:stock.reservation:stock_reserve.view_stock_reservation_form
+#: view:stock.reservation:stock_reserve.view_stock_reservation_tree
+msgid "Reserve"
+msgstr "Reservar"
+
+#. module: stock_reserve
+#: view:stock.reservation:stock_reserve.view_stock_reservation_search
+msgid "Reserved"
+msgstr "Reservado"
+
+#. module: stock_reserve
+#: field:stock.reservation,sequence:0
+msgid "Sequence"
+msgstr "Secuencia"
+
+#. module: stock_reserve
+#: view:stock.reservation:stock_reserve.view_stock_reservation_search
+msgid "Status"
+msgstr "Estado"
+
+#. module: stock_reserve
+#: model:ir.model,name:stock_reserve.model_stock_move
+msgid "Stock Move"
+msgstr "Movimiento de existencias"
+
+#. module: stock_reserve
+#: model:ir.model,name:stock_reserve.model_stock_reservation
+msgid "Stock Reservation"
+msgstr "Reserva de stock"
+
+#. module: stock_reserve
+#: model:ir.actions.act_window,name:stock_reserve.action_stock_reservation
+#: model:ir.ui.menu,name:stock_reserve.menu_action_stock_reservation
+#: view:stock.reservation:stock_reserve.view_stock_reservation_form
+#: view:stock.reservation:stock_reserve.view_stock_reservation_search
+#: view:stock.reservation:stock_reserve.view_stock_reservation_tree
+msgid "Stock Reservations"
+msgstr "Reservas de stock"
+
+#. module: stock_reserve
+#: field:stock.reservation,message_summary:0
+msgid "Summary"
+msgstr "Sumario"
+
+#. module: stock_reserve
+#: view:stock.reservation:stock_reserve.view_stock_reservation_tree
+msgid "Total"
+msgstr "Total"
+
+#. module: stock_reserve
+#: field:stock.reservation,message_unread:0
+msgid "Unread Messages"
+msgstr "Unread Messages"
+
+#. module: stock_reserve
+#: field:stock.reservation,date_validity:0
+msgid "Validity Date"
+msgstr "Fecha de validez"
+
+#. module: stock_reserve
+#: view:stock.reservation:stock_reserve.view_stock_reservation_form
+msgid "View Reservation Move"
+msgstr "View Reservation Move"
+
+#. module: stock_reserve
+#: view:stock.reservation:stock_reserve.view_stock_reservation_search
+msgid "Waiting"
+msgstr "Esperando"
+
+#. module: stock_reserve
+#: field:product.product,reserves_count:0
+msgid "unknown"
+msgstr "desconocido"
+

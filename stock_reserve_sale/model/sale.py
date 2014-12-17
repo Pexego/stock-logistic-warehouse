@@ -94,7 +94,6 @@ class sale_order(orm.Model):
         #self.release_all_stock_reservation(cr, uid, ids, context=context)
         res = super(sale_order, self).action_button_confirm(
             cr, uid, ids, context=context)
-
         picking_ids = []
         move_ids = []
         move_obj = self.pool.get('stock.move')
