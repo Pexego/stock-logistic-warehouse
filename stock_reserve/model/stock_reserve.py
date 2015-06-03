@@ -137,13 +137,7 @@ class stock_reservation(osv.osv):
             return True
         if isinstance(ids, (int, long)):
             ids = [ids]
-        print context
-        print vals
-        print vals.get('sequence')
         if vals.get('sequence', False) and context.get('first', False):
-            if context['first'] == True:
-                print "REASIGNA"
-                print vals['sequence']
             old_sequences = {}
             for reservation in self.browse(cr, uid, ids, context):
                 old_sequences[reservation.id] = reservation.sequence
@@ -166,13 +160,9 @@ class stock_reservation(osv.osv):
                 sequence = min(old_sequence[reservation.id], reservation.sequence)
             else:
                 sequence = reservation.sequence
-            print "se reasigna a partir de secuencia"
-            print sequence
             reserv_ids = self.search(cr, uid, [('sequence', '>=', sequence), ('product_id', '=', reservation.product_id.id), ('state', 'in', ['draft', 'confirmed', 'assigned'])])
 
             #Undo all reserves in reservations under the first sequence
-        print "reservas a liberar"
-        print reserv_ids
         self.do_complete_release(cr, uid, reserv_ids)
         self.reserve(cr, uid, reserv_ids)
 
@@ -186,9 +176,6 @@ class stock_reservation(osv.osv):
             quant_obj.quants_unreserve(cr, uid, reserve.move_id, context=context)
             self.write(cr, uid, [reserve.id], {'state': 'draft'}, context=context)
             reserve.refresh()
-
-
-
 
     def reserve(self, cr, uid, ids, context=None):
         """ Confirm a reservation
@@ -212,11 +199,7 @@ class stock_reservation(osv.osv):
 
         return True
 
-
-
-
     def release(self, cr, uid, ids, context=None):
-        print "release reserve"
         if isinstance(ids, (int, long)):
             ids = [ids]
         reservations = self.read(cr, uid, ids, ['move_id'],
@@ -224,8 +207,6 @@ class stock_reservation(osv.osv):
         move_obj = self.pool.get('stock.move')
         move_ids = [reserv['move_id'] for reserv in reservations]
         #Unreserve the quant
-        print "cancel move"
-        print move_ids
         move_obj.action_cancel(cr, uid, move_ids, context=context)
         if ids:
             for id in ids:
