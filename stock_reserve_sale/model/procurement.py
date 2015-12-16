@@ -1,4 +1,4 @@
-from openerp.osv import fields, osv
+from openerp.osv import orm, fields
 from openerp.tools.translate import _
 
 from openerp.tools import DEFAULT_SERVER_DATE_FORMAT, DEFAULT_SERVER_DATETIME_FORMAT
@@ -7,19 +7,25 @@ from dateutil.relativedelta import relativedelta
 from datetime import datetime
 import openerp
 
-class procurement_order(osv.osv):
+class procurement_order(orm.Model):
+
     _inherit = "procurement.order"
 
-    # def _run(self, cr, uid, procurement, context=None):
-    #
-    #     if procurement.sale_line_id and procurement.sale_line_id.reservation_ids:
-    #         move_obj = self.pool.get('stock.move')
-    #         reserve_obj = self.pool.get('stock.reservation')
-    #
-    #         # Release previous reservation in that sale order line
-    #         for reservation in procurement.sale_line_id.reservation_ids:
-    #             reservation.release()
-    #             reservation.refresh()
-    #     #Execute the procurement
-    #     res = super(procurement_order, self)._run(cr, uid, procurement, context=context)
-    #     return res
+    _columns = {
+        'reservation_paused': fields.boolean('Reservation paused')
+    }
+
+
+class stock_move(orm.Model):
+
+    _inherit = "stock.move"
+
+    def action_assign(self, cr, uid, ids, context=None):
+        valid_ids = []
+        for move in self.browse(cr, uid, ids, context=context):
+            if not move.procurement_id or not move.procurement_id.reservation_paused:
+                valid_ids.append(move.id)
+
+        if valid_ids:
+            super(stock_move, self).action_assign(cr, uid, valid_ids, context=context)
+

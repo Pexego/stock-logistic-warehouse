@@ -54,6 +54,13 @@ msgid "Cancel"
 msgstr "Cancelar"
 
 #. module: stock_reserve_sale
+#: field:procurement.order,reservation_paused:0
+#: view:sale.order:stock_reserve_sale.view_sales_order_filter_reserve
+#: field:sale.order,reservation_paused:0
+msgid "Reservation paused"
+msgstr "Reserva pausada"
+
+#. module: stock_reserve_sale
 #: view:sale.order:stock_reserve_sale.view_order_form_reserve
 msgid "Cancel Quotation"
 msgstr "Cancelar presupuesto"

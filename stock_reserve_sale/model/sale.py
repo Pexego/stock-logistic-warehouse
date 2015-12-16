@@ -59,6 +59,7 @@ class sale_order(orm.Model):
               \nThe exception status is automatically set when a cancel operation occurs \
               in the invoice validation (Invoice Exception) or in the picking list process (Shipping Exception).\nThe 'Waiting Schedule' status is set when the invoice is confirmed\
                but waiting for the scheduler to run on the order date.", select=True),
+        'reservation_paused': fields.boolean('Reservation paused'),
         'order_line': fields.one2many('sale.order.line', 'order_id', 'Order Lines', readonly=True, states={'draft': [('readonly', False)], 'sent': [('readonly', False)], 'reserve': [('readonly', False)]}),
         'partner_id': fields.many2one('res.partner', 'Customer', readonly=True, states={'draft': [('readonly', False)], 'sent': [('readonly', False)], 'reserve': [('readonly', False)]}, required=True, change_default=True, select=True, track_visibility='always'),
         'partner_invoice_id': fields.many2one('res.partner', 'Invoice Address', readonly=True, required=True, states={'draft': [('readonly', False)], 'sent': [('readonly', False)], 'reserve': [('readonly', False)]}, help="Invoice address for current sales order."),
@@ -90,30 +91,34 @@ class sale_order(orm.Model):
     def action_ship_create(self, cr, uid, ids, context=None):
         res = super(sale_order, self).action_ship_create(
             cr, uid, ids, context=context)
-        picking_ids = []
-        move_ids = []
-        move_obj = self.pool.get('stock.move')
-        reservation_obj = self.pool.get('stock.reservation')
-        for order in self.browse(cr, uid, ids, context=context):
-            picking_ids += [pick.id for pick in order.picking_ids if pick.picking_type_code == "outgoing" and pick.state != "cancel"]
-            pickings = self.pool.get('stock.picking').browse (cr, uid, picking_ids)
-            for picking in pickings:
-                move_ids += [move.id for move in picking.move_lines]
+        sale_obj = self.browse(cr, uid, ids[0])
+        if sale_obj.reservation_paused:
+            sale_obj.release_all_stock_reservation()
+        else:
+            picking_ids = []
+            move_ids = []
+            move_obj = self.pool.get('stock.move')
+            reservation_obj = self.pool.get('stock.reservation')
+            for order in self.browse(cr, uid, ids, context=context):
+                picking_ids += [pick.id for pick in order.picking_ids if pick.picking_type_code == "outgoing" and pick.state != "cancel"]
+                pickings = self.pool.get('stock.picking').browse (cr, uid, picking_ids)
+                for picking in pickings:
+                    move_ids += [move.id for move in picking.move_lines]
 
-        reservation_ids = self.get_reservations(cr, uid, ids, context=context)
-        visted_move_ids = []
-        for reservation in reservation_obj.browse(cr, uid, reservation_ids, context=context):
-            move_id_change = move_obj.search(cr, uid, [('id', 'in', move_ids),
-                                                       ('product_id', '=', reservation.product_id.id),
-                                                       ('id', 'not in', visted_move_ids)])
-            if move_id_change:
-                move_id_change = move_id_change[0]
-                visted_move_ids.append(move_id_change)
-                prev_move = reservation.move_id
-                reservation_obj.write(cr, uid, reservation.id, {'move_id': move_id_change})
-                move_obj.action_cancel(cr, uid, [prev_move.id], context=context)
-                move_obj.unlink(cr, uid, [prev_move.id], context=context)
-        self.pool.get('stock.picking').action_assign(cr, uid, picking_ids, context=context)
+            reservation_ids = self.get_reservations(cr, uid, ids, context=context)
+            visted_move_ids = []
+            for reservation in reservation_obj.browse(cr, uid, reservation_ids, context=context):
+                move_id_change = move_obj.search(cr, uid, [('id', 'in', move_ids),
+                                                           ('product_id', '=', reservation.product_id.id),
+                                                           ('id', 'not in', visted_move_ids)])
+                if move_id_change:
+                    move_id_change = move_id_change[0]
+                    visted_move_ids.append(move_id_change)
+                    prev_move = reservation.move_id
+                    reservation_obj.write(cr, uid, reservation.id, {'move_id': move_id_change})
+                    move_obj.action_cancel(cr, uid, [prev_move.id], context=context)
+                    move_obj.unlink(cr, uid, [prev_move.id], context=context)
+            self.pool.get('stock.picking').action_assign(cr, uid, picking_ids, context=context)
         return res
 
     def get_reservations(self, cr, uid, ids, context=None):
@@ -157,6 +162,21 @@ class sale_order(orm.Model):
         if sale.state == 'draft':
             self.signal_workflow(cr, uid, ids, 'quotation_sent')
         return self.pool['report'].get_action(cr, uid, ids, 'sale.report_saleorder', context=context)
+
+    def _prepare_order_line_procurement(self, cr, uid, order, line, group_id=False, context=None):
+        vals = super(sale_order, self)._prepare_order_line_procurement(cr, uid, order, line, group_id=group_id, context=context)
+        vals['reservation_paused'] = order.reservation_paused
+        return vals
+
+    def write(self, cr, uid, ids, vals, context=None):
+        res = super(sale_order, self).write(cr, uid, ids, vals, context=context)
+        if 'reservation_paused' in vals:
+            procurements = {}
+            for order in self.browse(cr, uid, ids):
+                if order.procurement_group_id:
+                    self.pool.get('procurement.order').\
+                        write(cr, uid, [x.id for x in order.procurement_group_id.procurement_ids], {'reservation_paused': vals['reservation_paused']})
+        return res
 
 
 class sale_order_line(orm.Model):
