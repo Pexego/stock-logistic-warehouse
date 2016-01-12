@@ -233,7 +233,7 @@ class stock_reservation(osv.osv):
         move_obj.do_unreserve (cr, uid, move_ids)
         move_obj.write(cr, uid, move_ids, {'state': 'draft'}, context=context)
         #self.release(cr, uid, ids, context=context)
-        move_obj.unlink(cr, uid, move_ids, context=context)
+        #move_obj.unlink(cr, uid, move_ids, context=context)
         return super(stock_reservation, self).unlink(cr, uid, ids,
                                                      context=context)
 
