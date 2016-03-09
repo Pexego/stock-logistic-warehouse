@@ -67,9 +67,9 @@ class sale_order(orm.Model):
     }
 
     def create(self, cr, uid, vals, context=None):
-        id = super(sale_order, self).create(cr, uid, vals, context=context)
         context2 = dict(context)
         context2.pop('default_state', False)
+        id = super(sale_order, self).create(cr, uid, vals, context=context2)
         if self.browse(cr, uid, id,
                        context=context).state in ['reserve', ]:
             self.order_reserve(cr, uid, [id])
