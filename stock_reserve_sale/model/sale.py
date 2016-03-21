@@ -67,9 +67,7 @@ class sale_order(orm.Model):
     }
 
     def create(self, cr, uid, vals, context=None):
-        context2 = dict(context)
-        context2.pop('default_state', False)
-        id = super(sale_order, self).create(cr, uid, vals, context=context2)
+        id = super(sale_order, self).create(cr, uid, vals, context=context)
         if self.browse(cr, uid, id,
                        context=context).state in ['reserve', ]:
             self.order_reserve(cr, uid, [id])
@@ -92,33 +90,7 @@ class sale_order(orm.Model):
         res = super(sale_order, self).action_ship_create(
             cr, uid, ids, context=context)
         sale_obj = self.browse(cr, uid, ids[0])
-        if sale_obj.reservation_paused:
-            sale_obj.release_all_stock_reservation()
-        else:
-            picking_ids = []
-            move_ids = []
-            move_obj = self.pool.get('stock.move')
-            reservation_obj = self.pool.get('stock.reservation')
-            for order in self.browse(cr, uid, ids, context=context):
-                picking_ids += [pick.id for pick in order.picking_ids if pick.picking_type_code == "outgoing" and pick.state != "cancel"]
-                pickings = self.pool.get('stock.picking').browse (cr, uid, picking_ids)
-                for picking in pickings:
-                    move_ids += [move.id for move in picking.move_lines]
-
-            reservation_ids = self.get_reservations(cr, uid, ids, context=context)
-            visted_move_ids = []
-            for reservation in reservation_obj.browse(cr, uid, reservation_ids, context=context):
-                move_id_change = move_obj.search(cr, uid, [('id', 'in', move_ids),
-                                                           ('product_id', '=', reservation.product_id.id),
-                                                           ('id', 'not in', visted_move_ids)])
-                if move_id_change:
-                    move_id_change = move_id_change[0]
-                    visted_move_ids.append(move_id_change)
-                    prev_move = reservation.move_id
-                    reservation_obj.write(cr, uid, reservation.id, {'move_id': move_id_change})
-                    move_obj.action_cancel(cr, uid, [prev_move.id], context=context)
-                    move_obj.unlink(cr, 1, [prev_move.id], context=context)
-            self.pool.get('stock.picking').action_assign(cr, uid, picking_ids, context=context)
+        sale_obj.release_all_stock_reservation()
         return res
 
     def get_reservations(self, cr, uid, ids, context=None):
@@ -270,6 +242,14 @@ class sale_order_line(orm.Model):
             self.stock_reserve(cr, uid, ids, context=context)
         return res
 
+    def create(self, cr, uid, vals, context=None):
+        if context is None:
+            context = {}
+        context2 = dict(context)
+        context2.pop('default_state', False)
+        return super(sale_order_line, self).create(cr, uid, vals,
+                                                   context=context2)
+
     def _prepare_stock_reservation(self, cr, uid, line, context=None):
         product_uos = line.product_uos.id if line.product_uos else False
         return {'product_id': line.product_id.id,
@@ -299,7 +279,7 @@ class sale_order_line(orm.Model):
                 reserv_id = reserv_obj.create(cr, uid, vals, context=context)
                 reserv_obj.reserve(cr, uid, [reserv_id], context=context)
                 reserv = reserv_obj.browse(cr, uid, reserv_id, context=context)
-                follower_ids = [line.order_id.user_id.partner_id.id]
-                reserv_obj.message_subscribe(cr, uid, [reserv_id],
-                                             follower_ids, context=context)
+                #follower_ids = [line.order_id.user_id.partner_id.id]
+                #reserv_obj.message_subscribe(cr, uid, [reserv_id],
+                #                             follower_ids, context=context)
         return True
