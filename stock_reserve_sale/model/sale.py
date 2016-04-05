@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 ##############################################################################
 #
@@ -91,6 +90,11 @@ class sale_order(orm.Model):
             cr, uid, ids, context=context)
         sale_obj = self.browse(cr, uid, ids[0])
         sale_obj.release_all_stock_reservation()
+        picking_ids = [pick.id for pick in sale_obj.picking_ids
+                       if pick.picking_type_code == "outgoing"
+                       and pick.state != "cancel"]
+        if picking_ids:
+            self.pool.get('stock.picking').action_assign(cr, uid, picking_ids)
         return res
 
     def get_reservations(self, cr, uid, ids, context=None):
