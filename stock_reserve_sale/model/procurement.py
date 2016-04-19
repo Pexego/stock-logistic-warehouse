@@ -22,10 +22,12 @@ class stock_move(orm.Model):
 
     def action_assign(self, cr, uid, ids, context=None):
         valid_ids = []
+        res = False
         for move in self.browse(cr, uid, ids, context=context):
             if not move.procurement_id or not move.procurement_id.reservation_paused:
                 valid_ids.append(move.id)
 
         if valid_ids:
-            super(stock_move, self).action_assign(cr, uid, valid_ids, context=context)
+            res = super(stock_move, self).action_assign(cr, uid, valid_ids, context=context)
+        return res
 

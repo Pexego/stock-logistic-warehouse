@@ -228,11 +228,12 @@ class sale_order_line(orm.Model):
         update_on_reserve = ('product_id', 'product_uom', 'price_unit', 'product_uom_qty')
         keys = set(vals.keys())
         test_update = keys.intersection(update_on_reserve)
-
+        reserve = False
         res = super(sale_order_line, self).write(cr, uid, ids, vals, context=context)
         if test_update:
             for line in self.browse(cr, uid, ids, context=context):
                 if line.order_id.state in ['reserve', ]:
+                    reserve = True
                     if line.reservation_ids:
                         for reservation in line.reservation_ids:
                             reservation.write(
@@ -243,7 +244,8 @@ class sale_order_line(orm.Model):
                                  'product_uom_qty': line.product_uom_qty,
                                  }
                             )
-            self.stock_reserve(cr, uid, ids, context=context)
+            if reserve:
+                self.stock_reserve(cr, uid, ids, context=context)
         return res
 
     def create(self, cr, uid, vals, context=None):
