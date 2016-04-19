@@ -135,7 +135,8 @@ class stock_reservation(osv.osv):
             context = {}
         context2 = dict(context)
         context2.pop('default_state', False)
-        super(stock_reservation, self).create(cr, uid, vals, context=context2)
+        return super(stock_reservation, self).create(cr, uid, vals,
+                                                     context=context2)
 
     def write(self, cr, uid, ids, vals, context=None):
         if context is None:
