@@ -34,7 +34,13 @@ class stock_reservation(orm.Model):
             'sale_line_id', 'order_id',
             type='many2one',
             relation='sale.order',
-            string='Sale Order')
+            string='Sale Order'),
+        'partner_id': fields.related('sale_id', 'partner_id', string="Partner",
+                                     readonly=True, type="many2one",
+                                     relation="res.partner"),
+        'user_id': fields.related('sale_id', 'user_id', string="Responsible",
+                                  readonly=True, type="many2one",
+                                  relation="res.users")
     }
 
     def release(self, cr, uid, ids, context=None):

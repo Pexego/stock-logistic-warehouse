@@ -158,6 +158,16 @@ msgid "Sale Order"
 msgstr "Ventas"
 
 #. module: stock_reserve_sale
+#: field:stock.reservation,partner_id:0
+msgid "Partner"
+msgstr "Cliente"
+
+#. module: stock_reserve_sale
+#: field:stock.reservation,user_id:0
+msgid "Responsible"
+msgstr "Responsable"
+
+#. module: stock_reserve_sale
 #: field:stock.reservation,sale_line_id:0
 msgid "Sale Order Line"
 msgstr "Lineas de venta"

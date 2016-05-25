@@ -9,6 +9,8 @@
                 <group name="location" position="after">
                     <group name="sale" string="Sales">
                         <field name="sale_id"/>
+                        <field name="partner_id"/>
+                        <field name="user_id"/>
                         <field name="sale_line_id"/>
                     </group>
                 </group>
@@ -21,7 +23,9 @@
             <field name="inherit_id" ref="stock_reserve.view_stock_reservation_tree"/>
             <field name="arch" type="xml">
                 <field name="move_id" position="before">
+                    <field name="partner_id"/>
                     <field name="sale_id"/>
+                    <field name="user_id"/>
                 </field>
             </field>
         </record>
