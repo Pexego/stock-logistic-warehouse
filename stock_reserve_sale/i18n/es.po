@@ -168,6 +168,11 @@ msgid "Responsible"
 msgstr "Responsable"
 
 #. module: stock_reserve_sale
+#: field:stock.reservation,date_order:0
+msgid "Date order"
+msgstr "Fecha pedido"
+
+#. module: stock_reserve_sale
 #: field:stock.reservation,sale_line_id:0
 msgid "Sale Order Line"
 msgstr "Lineas de venta"

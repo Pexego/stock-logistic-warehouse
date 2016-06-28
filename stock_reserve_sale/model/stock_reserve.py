@@ -40,7 +40,10 @@ class stock_reservation(orm.Model):
                                      relation="res.partner"),
         'user_id': fields.related('sale_id', 'user_id', string="Responsible",
                                   readonly=True, type="many2one",
-                                  relation="res.users")
+                                  relation="res.users"),
+        'date_order': fields.related('sale_id', 'date_order',
+                                     string="Date order", readonly=True,
+                                     type="datetime")
     }
 
     def release(self, cr, uid, ids, context=None):
