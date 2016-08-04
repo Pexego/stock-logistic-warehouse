@@ -63,6 +63,15 @@ class sale_order(orm.Model):
         'partner_id': fields.many2one('res.partner', 'Customer', readonly=True, states={'draft': [('readonly', False)], 'sent': [('readonly', False)], 'reserve': [('readonly', False)]}, required=True, change_default=True, select=True, track_visibility='always'),
         'partner_invoice_id': fields.many2one('res.partner', 'Invoice Address', readonly=True, required=True, states={'draft': [('readonly', False)], 'sent': [('readonly', False)], 'reserve': [('readonly', False)]}, help="Invoice address for current sales order."),
         'partner_shipping_id': fields.many2one('res.partner', 'Delivery Address', readonly=True, required=True, states={'draft': [('readonly', False)], 'sent': [('readonly', False)], 'reserve': [('readonly', False)]}, help="Delivery address for current sales order."),
+        'picking_policy': fields.selection([('direct', 'Deliver each product when available'), ('one', 'Deliver all products at once')],
+            'Shipping Policy', required=True, readonly=True, states={'draft': [('readonly', False)], 'sent': [('readonly', False)], 'reserve': [('readonly', False)]},
+            help="""Pick 'Deliver each product when available' if you allow partial delivery."""),
+        'order_policy': fields.selection([
+                ('manual', 'On Demand'),
+                ('picking', 'On Delivery Order'),
+                ('prepaid', 'Before Delivery'),
+            ], 'Create Invoice', required=True, readonly=True, states={'draft': [('readonly', False)], 'sent': [('readonly', False)], 'reserve': [('readonly', False)]},
+            help="""On demand: A draft invoice can be created from the sales order when needed. \nOn delivery order: A draft invoice can be created from the delivery order when the products have been delivered. \nBefore delivery: A draft invoice is created from the sales order and must be paid before the products can be delivered."""),
     }
 
     def create(self, cr, uid, vals, context=None):
