@@ -40,11 +40,17 @@ class product_product(orm.Model):
                              'search_default_product_id': ids[0]}
         return action
 
+
+class product_template(orm.Model):
+
+    _inherit = "product.template"
+
     def _get_reserves_qty(self, cr, uid, ids, field_name, args, context=None):
         ret = {}
         res_obj = self.pool.get('stock.reservation')
         for prod in self.browse(cr, uid, ids, context=context):
-            res_ids = res_obj.search(cr, uid, [('product_id', '=', prod.id), ('state', 'not in', ['cancel', 'done'])], context=context)
+            prod_ids = prod.product_variant_ids.ids
+            res_ids = res_obj.search(cr, uid, [('product_id', 'in', prod_ids), ('state', 'not in', ['cancel', 'done'])], context=context)
             res = res_obj.browse(cr, uid, res_ids, context=context)
             ret[prod.id] = sum([x.product_uom_qty for x in res])
         return ret
