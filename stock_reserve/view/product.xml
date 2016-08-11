@@ -43,7 +43,7 @@
             <field name="inherit_id" ref="stock.view_template_property_form"/>
             <field name="arch" type="xml">
                 <xpath expr="//group[@string='Stock and Expected Variations']/div[1]" position="after">
-                    <field string="Reservations" name="reserves_count"/>
+                    <field string="Reservations stock" name="reserves_count"/>
                 </xpath>
             </field>
         </record>
