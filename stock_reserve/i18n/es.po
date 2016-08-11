@@ -233,7 +233,7 @@ msgstr "Reservas"
 
 #. module: stock_reserve
 #: view:product.product:stock_reserve.product_form_reservation_view
-msgid "Reservations stock""
+msgid "Reservations stock"
 msgstr "Stock en reservas"
 
 #. module: stock_reserve
