@@ -275,6 +275,7 @@ class sale_order_line(orm.Model):
                 'location_id': line.order_id.warehouse_id.lot_stock_id.id,
                 'price_unit': line.price_unit,
                 'sale_line_id': line.id,
+                'origin': line.order_id.name
                 }
 
     def stock_reserve(self, cr, uid, ids, context=None):
