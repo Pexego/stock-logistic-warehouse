@@ -6,6 +6,9 @@
             <field name="model">stock.reservation</field>
             <field name="inherit_id" ref="stock_reserve.view_stock_reservation_form"/>
             <field name="arch" type="xml">
+                <form position="attributes">
+                    <attribute name="create">false</attribute>
+                </form>
                 <group name="location" position="after">
                     <group name="sale" string="Sales">
                         <field name="sale_id"/>
@@ -23,6 +26,9 @@
             <field name="model">stock.reservation</field>
             <field name="inherit_id" ref="stock_reserve.view_stock_reservation_tree"/>
             <field name="arch" type="xml">
+                <tree position="attributes">
+                    <attribute name="create">false</attribute>
+                </tree>
                 <field name="move_id" position="before">
                     <field name="partner_id"/>
                     <field name="sale_id"/>
