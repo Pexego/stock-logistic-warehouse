@@ -244,15 +244,19 @@ class sale_order_line(orm.Model):
                 if line.order_id.state in ['reserve', ]:
                     reserve = True
                     if line.reservation_ids:
+                        wrote = False
                         for reservation in line.reservation_ids:
-                            reservation.write(
-                                {'product_id': line.product_id.id,
-                                 'name': line.name,
-                                 'product_uom': line.product_uom.id,
-                                 'price_unit': line.price_unit,
-                                 'product_uom_qty': line.product_uom_qty,
-                                 }
-                            )
+                            if not wrote:
+                                reservation.write(
+                                    {'product_id': line.product_id.id,
+                                     'name': line.name,
+                                     'product_uom': line.product_uom.id,
+                                     'price_unit': line.price_unit,
+                                     'product_uom_qty': line.product_uom_qty,
+                                     })
+                                wrote = True
+                            else:
+                                reservation.unlink()
             if reserve:
                 self.stock_reserve(cr, uid, ids, context=context)
         return res
