@@ -45,6 +45,6 @@ class stock_move(osv.osv):
                                              ['move_id'], order='sequence asc')
         ordered_ids = [x['move_id'][0] for x in reserve_ids]
         not_ordered_ids = [p for p in ids if p not in ordered_ids]
-        ids = ordered_ids + not_ordered_ids
+        ids = not_ordered_ids + ordered_ids
 
         return ids
