@@ -288,6 +288,9 @@ class sale_order_line(orm.Model):
 
         lines = line_obj.browse(cr, uid, ids, context=context)
         for line in lines:
+            if line.order_id.state in ('draft', 'sent', 'progress', 'done',
+                                       'manual'):
+                continue
             if not line.is_stock_reservable:
                 continue
             if line.reservation_ids:
