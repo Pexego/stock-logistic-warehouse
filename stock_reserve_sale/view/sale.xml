@@ -70,6 +70,8 @@
                         type="object"
                         string="Reserve Stock"
                         icon="terp-locked"
+                        attrs="{'invisible': ['|', ('reservation_ids', '!=', []),
+                                                   ('state', '!=', 'draft')]}"
                         />
 
                     <button name="release_stock_reservation"
